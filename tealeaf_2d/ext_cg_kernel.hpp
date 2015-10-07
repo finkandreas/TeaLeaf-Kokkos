@@ -152,8 +152,6 @@ struct CGCalcW
 	typedef Device device_type;
 	typedef Kokkos::View<double*,Device> KView;
   typedef Kokkos::View<const double*,Device, Kokkos::MemoryTraits<Kokkos::RandomAccess> > KViewConst;
-  typedef Kokkos::TeamPolicy<Device> team_policy;
-  typedef typename team_policy::member_type team_member;
 
 	CGCalcW(TLDims dims, KView w, KView p, KView kx, KView ky) 
 		: dims(dims), w(w), p(p), kx(kx), ky(ky) {}
@@ -232,8 +230,6 @@ struct CGCalcP
     typedef Device device_type;
     typedef Kokkos::View<double*,Device> KView;
     typedef Kokkos::View<const double*,Device> KViewConst;
-    typedef Kokkos::TeamPolicy<Device> team_policy;
-    typedef typename team_policy::member_type team_member;
 
     CGCalcP(TLDims dims, KView p, KView z, KView r, double beta, bool preconditioner) 
         : dims(dims), p(p), z(z), r(r), beta(beta), preconditioner(preconditioner) {}
