@@ -59,6 +59,12 @@
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
 #include <Kokkos_Vectorization.hpp>
+
+#ifdef KOKKOSP_ENABLE_PROFILING
+#include <impl/Kokkos_Profiling_Interface.hpp>
+#include <typeinfo>
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -302,41 +308,85 @@ public:
   inline int league_size() const { return m_league_size ; }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicy( execution_space & , int league_size_ , int team_size_request , int vector_length_request = 1 )
+  TeamPolicy( execution_space &
+            , int league_size_
+            , int team_size_request
+            , int vector_length_request = 1 )
     : m_league_size( league_size_ )
     , m_team_size( team_size_request )
-    , m_vector_length ( vector_length_request )
+    , m_vector_length( vector_length_request )
     {
       // Allow only power-of-two vector_length
-      int check = 0;
-      for(int k = 1; k <= vector_length_max(); k*=2)
-        if(k == vector_length_request)
-          check = 1;
-      if(!check)
+      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
+
+      // Make sure league size is permissable
+      if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+        Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
+
+      // Make sure total block size is permissable
+      if ( m_team_size * m_vector_length > 1024 ) {
+        Impl::throw_runtime_exception(std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. Team size x vector length must be smaller than 1024."));
+      }
+    }
+
+  /** \brief  Specify league size, request team size */
+  TeamPolicy( execution_space &
+            , int league_size_
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , int vector_length_request = 1 )
+    : m_league_size( league_size_ )
+    , m_team_size( -1 )
+    , m_vector_length( vector_length_request )
+    {
+      // Allow only power-of-two vector_length
+      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
+        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
 
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
         Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
     }
 
-  TeamPolicy( int league_size_ , int team_size_request , int vector_length_request = 1 )
+  TeamPolicy( int league_size_
+            , int team_size_request
+            , int vector_length_request = 1 )
     : m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length ( vector_length_request )
     {
       // Allow only power-of-two vector_length
-      int check = 0;
-      for(int k = 1; k <= vector_length_max(); k*=2)
-        if(k == vector_length_request)
-          check = 1;
-      if(!check)
+      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
 
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
         Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
 
+      // Make sure total block size is permissable
+      if ( m_team_size * m_vector_length > 1024 ) {
+        Impl::throw_runtime_exception(std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. Team size x vector length must be smaller than 1024."));
+      }
+    }
+
+  TeamPolicy( int league_size_
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , int vector_length_request = 1 )
+    : m_league_size( league_size_ )
+    , m_team_size( -1 )
+    , m_vector_length ( vector_length_request )
+    {
+      // Allow only power-of-two vector_length
+      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
+        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
+
+      // Make sure league size is permissable
+      if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+        Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
     }
 
   typedef Kokkos::Impl::CudaTeamMember member_type ;
@@ -486,8 +536,11 @@ public:
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
     }
 
+    const int team_size = 0 <= policy.team_size() ? policy.team_size() :
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( m_functor ) / policy.vector_length();
+
     const dim3 grid( int(policy.league_size()) , 1 , 1 );
-    const dim3 block( policy.vector_length() , policy.team_size() , 1 );
+    const dim3 block( policy.vector_length() , team_size , 1 );
 
     CudaParallelLaunch< ParallelFor >( *this, grid, block, shmem_size_total ); // copy to device and execute
   }
@@ -779,33 +832,48 @@ public:
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
-  , m_team_begin( cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,work_tag>( functor , policy.team_size() ) )
-  , m_shmem_begin( sizeof(double) * ( policy.team_size() + 2 ) )
-  , m_shmem_size( FunctorTeamShmemSize< FunctorType >::value( functor , policy.team_size() ) )
+  , m_team_begin( 0 )
+  , m_shmem_begin( 0 )
+  , m_shmem_size( 0 )
   , m_league_size( policy.league_size() )
   {
+    // Return Init value if the number of worksets is zero
+    if(policy.league_size() == 0) {
+      ValueInit::init( m_functor , result.ptr_on_device() );
+      return;
+    }
+
+    const int team_size = 0 <= policy.team_size() ? policy.team_size() :
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( m_functor ) / policy.vector_length();
+
+    m_team_begin = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,work_tag>( functor , team_size );
+    m_shmem_begin = sizeof(double) * ( team_size + 2 );
+    m_shmem_size = FunctorTeamShmemSize< FunctorType >::value( functor , team_size );
 
     // The global parallel_reduce does not support vector_length other than 1 at the moment
     if(policy.vector_length() > 1)
       Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a vector length of greater than 1 is not currently supported for CUDA.");
 
+    if( team_size < 32)
+      Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a team_size smaller than 32 is not currently supported with CUDA.");
+
     // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
 
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
-    const int not_power_of_two = 0 != ( policy.team_size() & ( policy.team_size() - 1 ) );
 
-    if ( not_power_of_two ||  CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
+    if ( ! Kokkos::Impl::is_integral_power_of_two( team_size ) ||
+         CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
 
-    const int block_count = std::min( policy.league_size() , policy.team_size() );
+    const int block_count = std::min( policy.league_size() , team_size );
 
     m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( functor ) * block_count );
     m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
     m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( functor ) );
 
     const dim3 grid( block_count , 1 , 1 );
-    const dim3 block( 1 , policy.team_size() , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
+    const dim3 block( 1 , team_size , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
 
     CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem_size_total ); // copy to device and execute
 
@@ -1066,11 +1134,25 @@ namespace Impl {
       increment( blockDim.y ),
       thread(thread_)
     {}
+    __device__ inline
+    TeamThreadRangeBoundariesStruct (const CudaTeamMember& thread_, const iType& begin_, const iType& end_):
+      start( begin_+threadIdx.y ),
+      end( end_ ),
+      increment( blockDim.y ),
+      thread(thread_)
+    {}
 #else
     KOKKOS_INLINE_FUNCTION
     TeamThreadRangeBoundariesStruct (const CudaTeamMember& thread_, const iType& count):
       start( 0 ),
       end( count ),
+      increment( 1 ),
+      thread(thread_)
+    {}
+    KOKKOS_INLINE_FUNCTION
+    TeamThreadRangeBoundariesStruct (const CudaTeamMember& thread_,  const iType& begin_, const iType& end_):
+      start( begin_ ),
+      end( end_ ),
       increment( 1 ),
       thread(thread_)
     {}
@@ -1120,7 +1202,7 @@ Impl::TeamThreadRangeBoundariesStruct<iType,Impl::CudaTeamMember>
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >
-  ThreadVectorRange(Impl::CudaTeamMember thread, const iType count) {
+  ThreadVectorRange(const Impl::CudaTeamMember& thread, const iType& count) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >(thread,count);
 }
 
@@ -1497,6 +1579,7 @@ inline
 void parallel_reduce( const ExecPolicy  & policy
                     , const FunctorTypeIn & functor_in
                     , const ViewType    & result_view
+                    , const std::string& str = "" 
                     , typename Impl::enable_if<
                       ( Impl::is_view<ViewType>::value && ! Impl::is_integral< ExecPolicy >::value &&
                         Impl::is_same<typename ExecPolicy::execution_space,Kokkos::Cuda>::value
@@ -1506,7 +1589,20 @@ void parallel_reduce( const ExecPolicy  & policy
   typedef typename Kokkos::Impl::if_c<FunctorHasValueType, FunctorTypeIn, Impl::CudaFunctorAdapter<FunctorTypeIn,ExecPolicy,typename ViewType::value_type> >::type FunctorType;
   FunctorType functor = Impl::if_c<FunctorHasValueType,FunctorTypeIn,FunctorType>::select(functor_in,FunctorType(functor_in));
 
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     }
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , policy , result_view );
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::endParallelScan(kpID);
+     }
+#endif
 }
 
 // general policy and pod or array of pod output
@@ -1515,6 +1611,7 @@ inline
 void parallel_reduce( const ExecPolicy  & policy
                     , const FunctorTypeIn & functor_in
                     , ResultType& result_ref
+                    , const std::string& str = "" 
                     , typename Impl::enable_if<
                       ( ! Impl::is_view<ResultType>::value &&
                         ! Impl::IsNonTrivialReduceFunctor<FunctorTypeIn>::value &&
@@ -1541,7 +1638,20 @@ void parallel_reduce( const ExecPolicy  & policy
                , 1
                );
 
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     }
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( FunctorType(functor_in) , policy , result_view );
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::endParallelScan(kpID);
+     }
+#endif
 }
 
 // general policy and pod or array of pod output
@@ -1550,6 +1660,7 @@ inline
 void parallel_reduce( const ExecPolicy  & policy
                     , const FunctorType & functor
                     , typename Kokkos::Impl::FunctorValueTraits< FunctorType , typename ExecPolicy::work_tag >::reference_type result_ref
+                    , const std::string& str = "" 
                     , typename Impl::enable_if<
                       (   Impl::IsNonTrivialReduceFunctor<FunctorType>::value &&
                         ! Impl::is_integral< ExecPolicy >::value  &&
@@ -1574,7 +1685,20 @@ void parallel_reduce( const ExecPolicy  & policy
                , ValueTraits::value_count( functor )
                );
 
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     }
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , policy , result_view );
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::endParallelScan(kpID);
+     }
+#endif
 }
 
 // integral range policy and view ouput
@@ -1583,6 +1707,7 @@ inline
 void parallel_reduce( const size_t        work_count
                     , const FunctorTypeIn & functor_in
                     , const ViewType    & result_view
+                    , const std::string& str = "" 
                     , typename Impl::enable_if<( Impl::is_view<ViewType>::value &&
                                                  Impl::is_same<
                           typename Impl::FunctorPolicyExecutionSpace< FunctorTypeIn , void >::execution_space,
@@ -1600,7 +1725,21 @@ void parallel_reduce( const size_t        work_count
 
   FunctorType functor = Impl::if_c<FunctorHasValueType,FunctorTypeIn,FunctorType>::select(functor_in,FunctorType(functor_in));
 
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     }
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , ExecPolicy(0,work_count) , result_view );
+
+#ifdef KOKKOSP_ENABLE_PROFILING
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::endParallelScan(kpID);
+     }
+#endif
+
 }
 
 // integral range policy and pod or array of pod output
@@ -1609,6 +1748,7 @@ inline
 void parallel_reduce( const size_t        work_count
                     , const FunctorTypeIn & functor_in
                     , ResultType& result
+                    , const std::string& str = "" 
                     , typename Impl::enable_if< ! Impl::is_view<ResultType>::value &&
                                                 ! Impl::IsNonTrivialReduceFunctor<FunctorTypeIn>::value &&
                                                 Impl::is_same<
@@ -1643,7 +1783,20 @@ void parallel_reduce( const size_t        work_count
                , 1
                );
 
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     }
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::endParallelScan(kpID);
+     }
+#endif
 }
 
 template< class FunctorType>
@@ -1651,6 +1804,7 @@ inline
 void parallel_reduce( const size_t        work_count
                     , const FunctorType & functor
                     , typename Kokkos::Impl::FunctorValueTraits< FunctorType , void >::reference_type result
+                    , const std::string& str = "" 
                     , typename Impl::enable_if< Impl::IsNonTrivialReduceFunctor<FunctorType>::value &&
                                                 Impl::is_same<
                              typename Impl::FunctorPolicyExecutionSpace< FunctorType , void >::execution_space,
@@ -1684,9 +1838,85 @@ void parallel_reduce( const size_t        work_count
                , ValueTraits::value_count( functor )
                );
 
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     }
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( functor , ExecPolicy(0,work_count) , result_view );
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+     if(Kokkos::Experimental::profileLibraryLoaded()) {
+	Kokkos::Experimental::endParallelScan(kpID);
+     }
+#endif
 }
 
+#ifdef KOKKOS_HAVE_CUDA
+template< class ExecPolicy , class FunctorType , class ResultType >
+inline
+void parallel_reduce( const std::string & str
+                    , const ExecPolicy  & policy
+                    , const FunctorType & functor
+                    , ResultType * result)
+{
+  #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
+  Kokkos::fence();
+  std::cout << "KOKKOS_DEBUG Start parallel_reduce kernel: " << str << std::endl;
+  #endif
+
+  parallel_reduce(policy,functor,result,str);
+
+  #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
+  Kokkos::fence();
+  std::cout << "KOKKOS_DEBUG End   parallel_reduce kernel: " << str << std::endl;
+  #endif
+  (void) str;
+}
+
+template< class ExecPolicy , class FunctorType , class ResultType >
+inline
+void parallel_reduce( const std::string & str
+                    , const ExecPolicy  & policy
+                    , const FunctorType & functor
+                    , ResultType & result)
+{
+  #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
+  Kokkos::fence();
+  std::cout << "KOKKOS_DEBUG Start parallel_reduce kernel: " << str << std::endl;
+  #endif
+
+  parallel_reduce(policy,functor,result,str);
+
+  #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
+  Kokkos::fence();
+  std::cout << "KOKKOS_DEBUG End   parallel_reduce kernel: " << str << std::endl;
+  #endif
+  (void) str;
+}
+
+template< class ExecPolicy , class FunctorType >
+inline
+void parallel_reduce( const std::string & str
+                    , const ExecPolicy  & policy
+                    , const FunctorType & functor)
+{
+  #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
+  Kokkos::fence();
+  std::cout << "KOKKOS_DEBUG Start parallel_reduce kernel: " << str << std::endl;
+  #endif
+
+  parallel_reduce(policy,functor,str);
+
+  #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
+  Kokkos::fence();
+  std::cout << "KOKKOS_DEBUG End   parallel_reduce kernel: " << str << std::endl;
+  #endif
+  (void) str;
+}
+#endif
 } // namespace Kokkos
 #endif /* defined( __CUDACC__ ) */
 

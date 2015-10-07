@@ -421,11 +421,8 @@ void ext_cg_calc_w_(
 	auto c = Chunks[*chunk-1];
 
 	CGCalcW<DEVICE> kernel(c->dims, c->w, c->p, c->kx, c->ky);
-#ifdef USE_TEAMS
-  PROFILED_PARALLEL_REDUCE(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), kernel, *pw, "CG Calc W");
-#else
-  PROFILED_PARALLEL_REDUCE(c->fullDomain, kernel, *pw, "CG Calc W");
-#endif
+    PROFILED_PARALLEL_REDUCE(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), kernel, *pw, "CG Calc W");
+
 }
 
 // Entry point for calculating ur
@@ -439,11 +436,7 @@ void ext_cg_calc_ur_(
 
 	CGCalcUr<DEVICE> kernel(c->dims, c->u, c->r, c->mi, c->z, c->p, c->w,
 			*alpha, c->preconditioner);
-#ifdef USE_TEAMS
   PROFILED_PARALLEL_REDUCE(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), kernel, *rrn, "CG Calc UR");
-#else
-	PROFILED_PARALLEL_REDUCE(c->fullDomain, kernel, *rrn, "CG Calc UR");
-#endif
 }
 
 // Entry point for calculating p
@@ -456,11 +449,7 @@ void ext_cg_calc_p_(
 
 	CGCalcP<DEVICE> kernel(c->dims, c->p, c->z, c->r, *beta, c->preconditioner);
 
-#ifdef USE_TEAMS
 	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), kernel, "CG Calc P");
-#else
-	PROFILED_PARALLEL_FOR(c->fullDomain, kernel, "CG Calc P");
-#endif
 }
 
 // Entry point for Chebyshev initialisation.
@@ -493,7 +482,7 @@ void ext_cheby_solver_init_(
 	PROFILED_PARALLEL_FOR(c->fullDomain, kernel, "Cheby Init");
 
 	ChebyCalcU<DEVICE> uKernel(c->dims, c->p, c->u);
-	PROFILED_PARALLEL_FOR(c->fullDomain, uKernel, "Cheby Calc U");
+	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), uKernel, "Cheby Calc U");
 }
 
 // Entry point for the Chebyshev iterations.
@@ -508,10 +497,10 @@ void ext_cheby_solver_iterate_(
 	ChebyIterate<DEVICE> kernel(c->dims, c->p, c->r, c->u, c->mi,
 			c->u0, c->w, c->kx, c->ky, c->alphas, c->betas, 
 			step, c->preconditioner);
-	PROFILED_PARALLEL_FOR(c->fullDomain, kernel, "Cheby Iterate");
+	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), kernel, "Cheby Iterate");
 
 	ChebyCalcU<DEVICE> uKernel(c->dims, c->p, c->u);
-	PROFILED_PARALLEL_FOR(c->fullDomain, uKernel, "Cheby Calc U");
+	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), uKernel, "Cheby Calc U");
 }
 
 // Entry point for CG initialisation.
@@ -559,11 +548,11 @@ void ext_ppcg_inner_(
 	int step = *currentStep-1;
 
 	PPCGCalcU<DEVICE> uKernel(c->dims, c->sd, c->r, c->u, c->kx, c->ky);
-	PROFILED_PARALLEL_FOR(c->fullDomain, uKernel, "PPCG Calc U");
+	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), uKernel, "PPCG Calc U");
 
 	PPCGCalcSd<DEVICE> sdKernel(c->dims, c->sd, c->r, c->mi, c->alphas, 
 			c->betas, c->theta, c->preconditioner, step);
-	PROFILED_PARALLEL_FOR(c->fullDomain, sdKernel, "PPCG Calc SD");
+	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), sdKernel, "PPCG Calc SD");
 }
 
 
