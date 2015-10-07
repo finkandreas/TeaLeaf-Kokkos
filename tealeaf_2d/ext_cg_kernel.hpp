@@ -158,164 +158,103 @@ struct CGCalcW
 	CGCalcW(TLDims dims, KView w, KView p, KView kx, KView ky) 
 		: dims(dims), w(w), p(p), kx(kx), ky(ky) {}
 
-#ifdef USE_TEAMS
-	KOKKOS_INLINE_FUNCTION
-	void operator()(const team_member& team, value_type& pw) const
-    {
-    const int team_offset = (team.league_rank()+2)*dims.y;
-    double pw_team = 0;
-    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,2,dims.y-2), [&] (const int &j,double& pw_thread) {
-      const int index = team_offset + j;
-			const double smvp = SMVP(p);
-			w[index] = smvp;
-			pw_thread += smvp*p[index];
-		},pw_team);
-    Kokkos::single(Kokkos::PerTeam(team),[&] () {
-      pw+=pw_team;
-    });
-	}
-#else
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int index, value_type& pw) const
-    {
-    KOKKOS_INDICES;
+    KOKKOS_INLINE_FUNCTION
+        void operator()(const int index, value_type& pw) const
+        {
+            KOKKOS_INDICES;
 
-    if(INDEX_IN_INNER_DOMAIN)
-    {
-      const double smvp = SMVP(p);
-      w[index] = smvp;
-      pw += w[index]*p[index];
-    }
-  }
-#endif
+            if(INDEX_IN_INNER_DOMAIN)
+            {
+                const double smvp = SMVP(p);
+                w[index] = smvp;
+                pw += w[index]*p[index];
+            }
+        }
 
-	TLDims dims;
-	KView w;
-	KViewConst p;
-	KViewConst kx;
-	KViewConst ky;
+    TLDims dims;
+    KView w;
+    KViewConst p;
+    KViewConst kx;
+    KViewConst ky;
 };
 
 // Calculates UR
 template <class Device>
 struct CGCalcUr
 {
-	typedef double value_type;
-	typedef Device device_type;
-	typedef Kokkos::View<double*,Device> KView;
-	typedef Kokkos::View<const double*,Device> KViewConst;
-	typedef Kokkos::TeamPolicy<Device> team_policy;
-	typedef typename team_policy::member_type team_member;
+    typedef double value_type;
+    typedef Device device_type;
+    typedef Kokkos::View<double*,Device> KView;
+    typedef Kokkos::View<const double*,Device> KViewConst;
 
-	CGCalcUr(TLDims dims, KView u, KView r, KView mi, KView z, KView p, 
-			KView w, double alpha, bool preconditioner) 
-		: dims(dims), u(u), r(r), mi(mi), z(z), p(p), w(w),
-		alpha(alpha), preconditioner(preconditioner)	{}
+    CGCalcUr(TLDims dims, KView u, KView r, KView mi, KView z, KView p, 
+            KView w, double alpha, bool preconditioner) 
+        : dims(dims), u(u), r(r), mi(mi), z(z), p(p), w(w),
+        alpha(alpha), preconditioner(preconditioner)	{}
 
-#ifdef USE_TEAMS
-	KOKKOS_INLINE_FUNCTION
-	void operator()(const team_member& team, value_type& rrn) const
-  {
-    const int team_offset = (team.league_rank()+2)*dims.y;
-    double rrn_team = 0;
-    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,2,dims.y-2), [&] (const int &j,double& rrn_thread) {
-      const int index = team_offset + j;
-			u[index] += alpha*p[index];
-			r[index] -= alpha*w[index];
-      const double r_tmp = r[index];
+    KOKKOS_INLINE_FUNCTION
+        void operator()(const int index, value_type& rrn) const
+        {
+            KOKKOS_INDICES;
 
-			if(preconditioner)
-			{
-				const double z_tmp = mi[index]*r_tmp;
-				z[index] = z_tmp;
-				rrn_thread += r_tmp*z_tmp;
-			}
-			else
-			{
-				rrn_thread += r_tmp*r_tmp;
-			}
-		},rrn_team);
-    Kokkos::single(Kokkos::PerTeam(team),[&] () {
-      rrn+=rrn_team;
-    });
-	}
-#else
+            if(INDEX_IN_INNER_DOMAIN)
+            {
+                u[index] += alpha*p[index];
+                r[index] -= alpha*w[index];
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int index, value_type& rrn) const
-    {
-    KOKKOS_INDICES;
-
-    if(INDEX_IN_INNER_DOMAIN)
-    {
-      u[index] += alpha*p[index];
-      r[index] -= alpha*w[index];
-
-      if(preconditioner)
-      {
-        z[index] = mi[index]*r[index];
-        rrn += r[index]*z[index];
-      }
-      else
-      {
-        rrn += r[index]*r[index];
-      }
-    }
-  }
-#endif
-	TLDims dims;
-	KView u;
-	KView r;
-	KViewConst mi;
-	KView z;
-	KViewConst p;
-	KViewConst w;
-	double alpha;
-	bool preconditioner;
+                if(preconditioner)
+                {
+                    z[index] = mi[index]*r[index];
+                    rrn += r[index]*z[index];
+                }
+                else
+                {
+                    rrn += r[index]*r[index];
+                }
+            }
+        }
+    
+    TLDims dims;
+    KView u;
+    KView r;
+    KViewConst mi;
+    KView z;
+    KViewConst p;
+    KViewConst w;
+    double alpha;
+    bool preconditioner;
 };
 
 // Calculates P
 template <class Device>
 struct CGCalcP
 {
-	typedef Device device_type;
-	typedef Kokkos::View<double*,Device> KView;
-	typedef Kokkos::View<const double*,Device> KViewConst;
-  typedef Kokkos::TeamPolicy<Device> team_policy;
-  typedef typename team_policy::member_type team_member;
+    typedef Device device_type;
+    typedef Kokkos::View<double*,Device> KView;
+    typedef Kokkos::View<const double*,Device> KViewConst;
+    typedef Kokkos::TeamPolicy<Device> team_policy;
+    typedef typename team_policy::member_type team_member;
 
-	CGCalcP(TLDims dims, KView p, KView z, KView r, double beta, bool preconditioner) 
-		: dims(dims), p(p), z(z), r(r), beta(beta), preconditioner(preconditioner) {}
+    CGCalcP(TLDims dims, KView p, KView z, KView r, double beta, bool preconditioner) 
+        : dims(dims), p(p), z(z), r(r), beta(beta), preconditioner(preconditioner) {}
 
-#ifdef USE_TEAMS
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const
-  {
-    const int team_offset = (team.league_rank()+2)*dims.y;
-    Kokkos::parallel_for(Kokkos::TeamThreadRange(team,2,dims.y-2), [&] (const int &j) {
-      const int index = team_offset + j;
-      p[index] = beta*p[index] + ((preconditioner) ? z[index] : r[index]);
-    });
-  }
-#else
-	KOKKOS_INLINE_FUNCTION
-	void operator()(const int index) const 
-    {
-		KOKKOS_INDICES;
+    KOKKOS_INLINE_FUNCTION
+        void operator()(const int index) const 
+        {
+            KOKKOS_INDICES;
 
-		if(INDEX_IN_INNER_DOMAIN)
-		{
-			p[index] = beta*p[index] + ((preconditioner) ? z[index] : r[index]);
-		}
-	}
-#endif
+            if(INDEX_IN_INNER_DOMAIN)
+            {
+                p[index] = beta*p[index] + ((preconditioner) ? z[index] : r[index]);
+            }
+        }
 
-	TLDims dims;
-	KView p;
-	KViewConst r;
-	KViewConst z;
-	double beta;
-	bool preconditioner;
+    TLDims dims;
+    KView p;
+    KViewConst r;
+    KViewConst z;
+    double beta;
+    bool preconditioner;
 };
 
 #endif
