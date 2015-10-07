@@ -56,7 +56,7 @@ struct ChebyCalcU
 	ChebyCalcU(TLDims dims, KView p, KView u) 
 		: dims(dims), p(p), u(u) {}
 
-	KOKKOS_INLINE_FUNCTION
+KOKKOS_INLINE_FUNCTION
 	void operator()(const int index) const 
     {
 		KOKKOS_INDICES;

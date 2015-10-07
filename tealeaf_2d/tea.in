@@ -19,8 +19,8 @@ use_ext_kernels
 !use_fortran_kernels
 
 !tl_use_jacobi
-tl_use_cg
-!tl_use_chebyshev
+!tl_use_cg
+tl_use_chebyshev
 !tl_use_ppcg
 
 tl_check_result

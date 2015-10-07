@@ -30,7 +30,7 @@ COMPILER         = GNU
 MPI_F90          = mpif90
 MPI_CPP          = mpicxx
 KOKKOS_PATH ?= ../kokkos_src
-OPTIONS     += #-DENABLE_TIMELOGGING -DENABLE_PROFILING
+OPTIONS     += -DUSE_TEAMS -DENABLE_PROFILING #-DENABLE_TIMELOGGING
 EXE 		 = tea_leaf
 
 # Compiler-specific flags
