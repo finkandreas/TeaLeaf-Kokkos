@@ -1,0 +1,135 @@
+ 
+   Tea Version    1.100
+Open MP and MPI Ve
+   Task Count      1
+ 
+ Tea will run from the following input:-
+ 
+*tea                                                                                                
+state 1 density=100.0 energy=0.0001                                                                 
+state 2 density=0.1 energy=25.0 geometry=rectangle xmin=0.0 xmax=1.0 ymin=1.0 ymax=2.0              
+state 3 density=0.1 energy=0.1 geometry=rectangle xmin=1.0 xmax=6.0 ymin=1.0 ymax=2.0               
+state 4 density=0.1 energy=0.1 geometry=rectangle xmin=5.0 xmax=6.0 ymin=1.0 ymax=8.0               
+state 5 density=0.1 energy=0.1 geometry=rectangle xmin=5.0 xmax=10.0 ymin=7.0 ymax=8.0              
+xmin=0.0                                                                                            
+ymin=0.0                                                                                            
+xmax=10.0                                                                                           
+ymax=10.0                                                                                           
+                                                                                                    
+initial_timestep=0.004                                                                              
+end_step=20                                                                                         
+tl_max_iters=5000                                                                                   
+                                                                                                    
+use_ext_kernels                                                                                     
+                                                                                                    
+tl_check_result                                                                                     
+tl_eps=1.0e-15                                                                                      
+                                                                                                    
+tl_ch_cg_epslim=0.0001                                                                              
+tl_ch_cg_presteps=20                                                                                
+tl_ppcg_inner_steps=350                                                                             
+x_cells=4096                                                                                        
+y_cells=4096                                                                                        
+test_problem=14                                                                                     
+tl_use_chebyshev                                                                                    
+*endtea                                                                                             
+ 
+ Initialising and generating
+ 
+ Reading input file
+ 
+ Reading specification for state            1
+ 
+            state density   0.1000E+03
+             state energy   0.1000E-03
+ 
+ Reading specification for state            2
+ 
+            state density   0.1000E+00
+             state energy   0.2500E+02
+ state geometry rectangular
+               state xmin   0.0000E+00
+               state xmax   0.1000E+01
+               state ymin   0.1000E+01
+               state ymax   0.2000E+01
+ 
+ Reading specification for state            3
+ 
+            state density   0.1000E+00
+             state energy   0.1000E+00
+ state geometry rectangular
+               state xmin   0.1000E+01
+               state xmax   0.6000E+01
+               state ymin   0.1000E+01
+               state ymax   0.2000E+01
+ 
+ Reading specification for state            4
+ 
+            state density   0.1000E+00
+             state energy   0.1000E+00
+ state geometry rectangular
+               state xmin   0.5000E+01
+               state xmax   0.6000E+01
+               state ymin   0.1000E+01
+               state ymax   0.8000E+01
+ 
+ Reading specification for state            5
+ 
+            state density   0.1000E+00
+             state energy   0.1000E+00
+ state geometry rectangular
+               state xmin   0.5000E+01
+               state xmax   0.1000E+02
+               state ymin   0.7000E+01
+               state ymax   0.8000E+01
+ 
+                      xmin  0.0000E+00
+                      ymin  0.0000E+00
+                      xmax  0.1000E+02
+                      ymax  0.1000E+02
+         initial_timestep   0.4000E-02
+                  end_step          20
+           tl_ch_cg_epslim  0.1000E-03
+         tl_ch_cg_presteps          20
+       tl_ppcg_inner_steps         350
+                   x_cells        4096
+                   y_cells        4096
+              test_problem          14
+ 
+ Using Extension Kernels
+ 
+ Input read finished.
+ 
+ Setting up initial geometry
+ 
+ 
+ Mesh ratio of    1.00000000000000     
+ Decomposing the mesh into            1  by            1  chunks
+ 
+ Generating chunks
+ 
+ Problem initialised and generated
+ 
+ Time   0.000000000000000E+000
+                       Volume            Mass         Density          Energy               U
+ step:      0   0.1000000E+03   0.8398722E+04   0.8398722E+02   0.3494851E+01   0.8423670E+02
+ 
+ Starting the calculation
+ Step       1 time   0.0000000 timestep   4.00E-03
+Switching after *** steps, error   0.9866242E+00
+     eigmin     eigmax         cn      error
+    1.0608956372.01190 0.5314E+05 0.9866E+00
+    est itc
+       1312
+Conduction error  0.9928679E-15
+EXACT error calculated as 0.9950265E-15
+Iteration count     3269
+ Wall clock    91.5275909900665     
+ Average time per cell   5.455469548110159E-006
+ Step time per cell      5.455169130641480E-006
+ Step       2 time   0.0040000 timestep   4.00E-03
+Switching after 860 steps, error   0.9806525E+00
+     eigmin     eigmax         cn      error
+    1.0532856371.99592 0.5352E+05 0.9807E+00
+    est itc
+       1327
