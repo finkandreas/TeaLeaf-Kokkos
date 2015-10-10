@@ -27,8 +27,8 @@ default: build
 # KOKKOS_PATH is the root of Kokkos installation, default to local copy
 TARGET           = OMP
 COMPILER         = INTEL
-MPI_F90          = mpif90
-MPI_CPP          = mpic++
+MPI_F90          = ftn
+MPI_CPP          = CC
 KOKKOS_PATH ?= ../kokkos_src
 OPTIONS     += -DENABLE_PROFILING #-DENABLE_TIMELOGGING
 EXE 		 = tea_leaf

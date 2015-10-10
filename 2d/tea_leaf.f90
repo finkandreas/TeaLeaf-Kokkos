@@ -38,6 +38,7 @@ PROGRAM tea_leaf
 
   IMPLICIT NONE
 
+  INTEGER :: iargc
   CHARACTER(len=g_len_max) :: tea_out, tea_in, out_log
 
 !$ INTEGER :: OMP_GET_NUM_THREADS,OMP_GET_THREAD_NUM

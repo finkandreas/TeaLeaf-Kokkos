@@ -1,7 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <sstream>
-#include <fstream>
 #include <time.h>
 #include <map>
 
@@ -75,17 +73,14 @@ class ExtProfiler
 	// Prints out in first call order.
 	void PrintResults()
 	{
-        std::ostringstream  oss;
-		oss << std::setiosflags(std::ios::fixed) << std::left << std::endl
+		std::cout << std::setiosflags(std::ios::fixed) << std::left << std::endl
 			<< std::setw(30) << "Kernel Name" << std::setw(15) << "Time (ms)"
 			<< std::setw(10) << "Calls" << std::setw(10) << "ms/call"
 			<< std::setw(10) << "Efficiency" << std::endl;
 
-        double total = 0.0;
 		for(auto profile : profiles)
 		{
-            total += profile.second.time;
-			oss << std::setw(30) << profile.first
+			std::cout << std::setw(30) << profile.first
 				<< std::setw(15) << std::setprecision(3) << profile.second.time
 				<< std::setw(10) << profile.second.calls
 				<< std::setw(10) << profile.second.time/profile.second.calls
@@ -93,13 +88,7 @@ class ExtProfiler
 				<< std::endl;
 		}
 
-        oss << "Total kernel time: " << total << "ms" << std::endl;
-		oss << std::endl;
-
-        std::cout << oss.str() << std::endl;
-
-        std::ofstream out("profiling_results", std::ios::app);
-        out << oss.str() << std::endl;
+		std::cout << std::endl;
 	}
 };
 

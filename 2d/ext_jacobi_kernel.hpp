@@ -99,7 +99,6 @@ struct JacobiSolve
 
 		if(INDEX_IN_INNER_DOMAIN)
 		{
-			int page = dims.x*dims.y;
 			u(index) = (u0(index) + (kx(index+1)*r(index+1) + kx(index)*r(index-1))
 					+ (ky(index+dims.x)*r(index+dims.x) + ky(index)*r(index-dims.x)))
 				/ (1.0 + (kx(index)+kx(index+1)) + (ky(index)+ky(index+dims.x)));

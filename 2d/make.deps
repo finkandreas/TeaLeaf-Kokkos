@@ -50,11 +50,11 @@ update_halo.o update_halo_module.mod: update_halo.f90 tea_module.mod \
 update_halo_kernel.o update_halo_kernel_module.mod: \
  update_halo_kernel.f90
 visit.o: visit.f90 tea_module.mod update_halo_module.mod
-ext_chunk.o:	 	 ext_chunk.cpp ext_chunk.hpp ext_profiler.hpp
+ext_chunk.o:	 	 ext_chunk.cpp ext_chunk.hpp 
 ext_core.o:			 ext_chunk.cpp ext_chunk.hpp ext_cg_kernel.hpp \
 					 ext_cheby_kernel.hpp ext_chunk.cpp ext_chunk.hpp \
 					 ext_core.cpp ext_field_summary.hpp ext_generate_chunk.hpp \
 					 ext_initialise_chunk.hpp ext_jacobi_kernel.hpp \
 					 ext_pack_kernel.hpp ext_ppcg_kernel.hpp \
 					 ext_set_field.hpp ext_shared.hpp \
-					 ext_solver_methods.hpp ext_update_halo.hpp ext_profiler.hpp
+					 ext_solver_methods.hpp ext_update_halo.hpp

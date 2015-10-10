@@ -1,11 +1,11 @@
 #ifndef __SHARED
 #define __SHARED
 
-#include "ext_profiler.hpp"
 #include <iostream>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_View.hpp>
+#include "ext_profiler.hpp"
 
 #define HALO_PAD 2
 #define HP2 HALO_PAD*2
