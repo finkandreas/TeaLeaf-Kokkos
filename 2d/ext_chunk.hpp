@@ -47,8 +47,8 @@ struct TeaLeafChunk
 	Kokkos::View<double*,Device> cellY;
 	Kokkos::View<double*,Device> xArea;
 	Kokkos::View<double*,Device> yArea;
-	Kokkos::View<double*,Device> alphas;
-	Kokkos::View<double*,Device> betas;
+    double* alphas;
+    double* betas;
 
 	// MPI Comms
 	Kokkos::View<double*,Device> lrBuffer;

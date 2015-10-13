@@ -53,6 +53,7 @@ struct ChebyCalcU
     typedef Device device_type;
     typedef Kokkos::View<double*,Device> KView;
     typedef Kokkos::TeamPolicy<Device> team_policy;
+    typedef Kokkos::View<const double*,Device> KViewConst;
     typedef typename team_policy::member_type team_member;
 
     ChebyCalcU(TLDims dims, KView p, KView u) 
@@ -69,8 +70,8 @@ struct ChebyCalcU
     }
 
     TLDims dims;
-    KView p; 
     KView u; 
+    KViewConst p; 
 };
 
 // The main Cheby iteration step
@@ -80,13 +81,15 @@ struct ChebyIterate
     typedef Device device_type;
     typedef Kokkos::View<double*,Device> KView;
     typedef Kokkos::TeamPolicy<Device> team_policy;
+    typedef Kokkos::View<const double*,Device, 
+            Kokkos::MemoryTraits<Kokkos::RandomAccess> > KViewConst;
     typedef typename team_policy::member_type team_member;
 
-    ChebyIterate(TLDims dims, KView p, KView r, KView u, KView mi, KView u0, 
-            KView w, KView kx, KView ky, KView alphas, KView betas, 
-            double step, bool preconditioner) 
+    ChebyIterate(TLDims dims, KView p, KView r, KViewConst u, KViewConst mi, 
+            KViewConst u0, KView w, KViewConst kx, KViewConst ky, 
+            double alpha, double beta, bool preconditioner) 
         : dims(dims), p(p), r(r), u(u), mi(mi), u0(u0), w(w), kx(kx), ky(ky), 
-        alphas(alphas), betas(betas), step(step), preconditioner(preconditioner){}
+        alpha(alpha), beta(beta), preconditioner(preconditioner){}
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const team_member& team) const
@@ -97,7 +100,7 @@ struct ChebyIterate
             const double smvp = SMVP(u);
             w[index] = smvp;
             r[index] = u0[index]-w[index];
-            p[index] = alphas[step]*p[index] + betas[step] *
+            p[index] = alpha*p[index] + beta *
             (preconditioner ? mi[index]*r[index] : r[index]);
         });
     }
@@ -105,15 +108,14 @@ struct ChebyIterate
     TLDims dims;
     KView p; 
     KView r; 
-    KView u; 
-    KView mi; 
-    KView u0; 
     KView w; 
-    KView kx; 
-    KView ky; 
-    KView alphas; 
-    KView betas; 
-    int step;
+    KViewConst u; 
+    KViewConst mi; 
+    KViewConst u0; 
+    KViewConst kx; 
+    KViewConst ky; 
+    double alpha; 
+    double beta; 
     bool preconditioner;
 };
 

@@ -40,9 +40,12 @@ struct PPCGCalcU
 	typedef Device device_type;
 	typedef Kokkos::View<double*,Device> KView;
     typedef Kokkos::TeamPolicy<Device> team_policy;
+    typedef Kokkos::View<const double*,Device, 
+            Kokkos::MemoryTraits<Kokkos::RandomAccess> > KViewConst;
     typedef typename team_policy::member_type team_member;
 
-	PPCGCalcU(TLDims dims, KView sd, KView r, KView u, KView kx, KView ky) 
+	PPCGCalcU(TLDims dims, KViewConst sd, KView r, 
+            KView u, KViewConst kx, KViewConst ky) 
 		: dims(dims), sd(sd), r(r), u(u), kx(kx), ky(ky) {}
 
     KOKKOS_INLINE_FUNCTION
@@ -58,11 +61,11 @@ struct PPCGCalcU
     }
 
 	TLDims dims;
-	KView sd; 
 	KView r; 
 	KView u; 
-	KView kx; 
-	KView ky; 
+	KViewConst sd; 
+	KViewConst kx; 
+	KViewConst ky; 
 };
 
 // Calculates Sd
@@ -72,32 +75,33 @@ struct PPCGCalcSd
 	typedef Device device_type;
 	typedef Kokkos::View<double*,Device> KView;
     typedef Kokkos::TeamPolicy<Device> team_policy;
+    typedef Kokkos::View<const double*,Device> KViewConst;
     typedef typename team_policy::member_type team_member;
 
-	PPCGCalcSd(TLDims dims, KView sd, KView r, KView mi, KView alphas, 
-			KView betas, double theta, bool preconditioner, int step) 
-		: dims(dims), sd(sd), r(r), mi(mi), alphas(alphas), betas(betas),
-	   	theta(theta), preconditioner(preconditioner), step(step){}
+	PPCGCalcSd(TLDims dims, KView sd, KViewConst r, KViewConst mi, double alpha, 
+			double beta, double theta, bool preconditioner) 
+		: dims(dims), sd(sd), r(r), mi(mi), alpha(alpha), beta(beta),
+	   	theta(theta), preconditioner(preconditioner) {}
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const team_member& team) const
     {
         const int team_offset = (team.league_rank() + 2) * dims.y;
-        Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 2, dims.y-2), [&] (const int &j) {
+        Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 2, dims.y-2), 
+                [&] (const int &j) {
             const int index = team_offset + j;
-			sd[index] = alphas[step]*sd[index]+betas[step]*
+			sd[index] = alpha*sd[index]+beta*
 				(preconditioner ? mi[index]*r[index] : r[index]);
         });
     }
 
 	TLDims dims;
 	KView sd; 
-	KView mi; 
-	KView r; 
-	KView alphas; 
-	KView betas; 
+	KViewConst mi; 
+	KViewConst r; 
+    double alpha;
+    double beta;
 	double theta; 
 	bool preconditioner;
-	int step;
 };
 

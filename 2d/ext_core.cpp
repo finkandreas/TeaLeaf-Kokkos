@@ -465,17 +465,8 @@ void ext_cheby_solver_init_(
 	auto c = Chunks[*chunk-1];
 
 	c->preconditioner = *preconditioner;
-	c->alphas = View<double*,DEVICE>("alphas", *maxChebyIters);
-	c->betas = View<double*,DEVICE>("betas", *maxChebyIters);
-
-	// Create the host mirrored objects, initialise them, and copy them to the device
-	View<double*>::HostMirror hAlphas = create_mirror_view(c->alphas);
-	KokkosHelper::InitMirror<double>(hAlphas,alphas,*maxChebyIters);
-	deep_copy(c->alphas, hAlphas);
-
-	View<double*>::HostMirror hBetas = create_mirror_view(c->betas);
-	KokkosHelper::InitMirror<double>(hBetas,betas,*maxChebyIters);
-	deep_copy(c->betas, hBetas);
+	c->alphas = alphas;
+	c->betas = betas;
 
 	ChebyInit<DEVICE> kernel(c->dims, c->p, c->r, c->u, c->mi, c->u0,
 			c->w, c->kx, c->ky, *theta, *preconditioner);
@@ -495,8 +486,8 @@ void ext_cheby_solver_iterate_(
 	int step = *chebyCalcStep-1;
 
 	ChebyIterate<DEVICE> kernel(c->dims, c->p, c->r, c->u, c->mi,
-			c->u0, c->w, c->kx, c->ky, c->alphas, c->betas, 
-			step, c->preconditioner);
+			c->u0, c->w, c->kx, c->ky, c->alphas[step], c->betas[step], 
+			c->preconditioner);
 	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), kernel, "Cheby Iterate");
 
 	ChebyCalcU<DEVICE> uKernel(c->dims, c->p, c->u);
@@ -514,17 +505,8 @@ void ext_ppcg_init_(
 {
 	auto c = Chunks[*chunk-1];
 	c->theta = *theta;
-    c->alphas = View<double*,DEVICE>("alphas", *maxChebyIters);
-    c->betas = View<double*,DEVICE>("betas", *maxChebyIters);
-
-	// Create the host mirrors, initialise them, and copy data to the device
-    View<double*>::HostMirror hAlphas = create_mirror_view(c->alphas);
-    KokkosHelper::InitMirror<double>(hAlphas,alphas,*maxChebyIters);
-    deep_copy(c->alphas, hAlphas);
-
-    View<double*>::HostMirror hBetas = create_mirror_view(c->betas);
-    KokkosHelper::InitMirror<double>(hBetas,betas,*maxChebyIters);
-    deep_copy(c->betas, hBetas);
+    c->alphas = alphas;
+    c->betas = betas;
 }
 
 // Entry point for initialising sd.
@@ -550,8 +532,8 @@ void ext_ppcg_inner_(
 	PPCGCalcU<DEVICE> uKernel(c->dims, c->sd, c->r, c->u, c->kx, c->ky);
 	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), uKernel, "PPCG Calc U");
 
-	PPCGCalcSd<DEVICE> sdKernel(c->dims, c->sd, c->r, c->mi, c->alphas, 
-			c->betas, c->theta, c->preconditioner, step);
+	PPCGCalcSd<DEVICE> sdKernel(c->dims, c->sd, c->r, c->mi, c->alphas[step], 
+			c->betas[step], c->theta, c->preconditioner);
 	PROFILED_PARALLEL_FOR(Kokkos::TeamPolicy<DEVICE>(c->dims.x-4,Kokkos::AUTO), sdKernel, "PPCG Calc SD");
 }
 

@@ -151,7 +151,8 @@ struct CGCalcW
     typedef double value_type;
     typedef Device device_type;
     typedef Kokkos::View<double*,Device> KView;
-    typedef Kokkos::View<const double*,Device, Kokkos::MemoryTraits<Kokkos::RandomAccess> > KViewConst;
+    typedef Kokkos::View<const double*,Device, 
+            Kokkos::MemoryTraits<Kokkos::RandomAccess> > KViewConst;
     typedef Kokkos::TeamPolicy<Device> team_policy;
     typedef typename team_policy::member_type team_member;
 
@@ -231,8 +232,8 @@ struct CGCalcUr
     TLDims dims;
     KView u;
     KView r;
-    KViewConst mi;
     KView z;
+    KViewConst mi;
     KViewConst p;
     KViewConst w;
     double alpha;
