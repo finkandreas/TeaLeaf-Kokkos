@@ -26,7 +26,7 @@ default: build
 # COMPILER = <INTEL|GNU> 	  : Currently tested with Intel, GNU compilers
 # KOKKOS_PATH is the root of Kokkos installation, default to local copy
 TARGET           = OMP
-COMPILER         = INTEL
+COMPILER         = PGI
 MPI_F90          = ftn
 MPI_CPP          = CC
 KOKKOS_PATH ?= ../kokkos_src
@@ -57,7 +57,7 @@ CFLAGS_INTEL     = -O3 -march=native -no-prec-div -restrict -fno-alias
 CFLAGS_SUN       = -fast -xipo=2
 CFLAGS_GNU       = -O3 -march=native -funroll-loops -DKOKKOSP_ENABLE_PROFILING
 CFLAGS_CRAY      = -em -h list=a
-CFLAGS_PGI       = -fastsse -gopt -Mipa=fast -Mlist
+CFLAGS_PGI       = -fastsse -gopt -Mipa=fast -Mlist -c11
 CFLAGS_PATHSCALE = -O3
 CFLAGS_XL        = -O5 -qipa=partition=large -g -qfullpath -Q -qlistopt -qattr=full -qlist -qreport -qxref=full -qsource -qsuppress=1506-224:1500-036 -qsrcmsg
 
