@@ -25,10 +25,10 @@ default: build
 # TARGET   = <OMP|CUDA|MIC>   : OpenMP, CUDA, MIC native compilation
 # COMPILER = <INTEL|GNU> 	  : Currently tested with Intel, GNU compilers
 # KOKKOS_PATH is the root of Kokkos installation, default to local copy
-TARGET           = CUDA
+TARGET           = OMP
 COMPILER         = GNU
-MPI_F90          = ftn
-MPI_CPP          = CC
+MPI_F90          = mpif90
+MPI_CPP          = mpic++
 KOKKOS_PATH ?= ../kokkos_src
 OPTIONS     += #-DENABLE_PROFILING  #-DENABLE_TIMELOGGING
 EXE 		 = tea_leaf
