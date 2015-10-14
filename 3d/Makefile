@@ -26,9 +26,9 @@ default: build
 # COMPILER = <INTEL|GNU> 	  : Currently tested with Intel, GNU compilers
 # KOKKOS_PATH is the root of Kokkos source
 TARGET   	 = OMP
-COMPILER 	 = INTEL
-MPI_F90	 	 = mpiifort
-MPI_CPP      = mpiicpc
+COMPILER 	 = GNU
+MPI_F90	 	 = mpif90
+MPI_CPP      = mpic++
 KOKKOS_PATH ?= ../kokkos_src
 OPTIONS     += #-DENABLE_TIMELOGGING -DENABLE_PROFILING
 EXE 		 = tea_leaf
