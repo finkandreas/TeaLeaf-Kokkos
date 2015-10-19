@@ -17,8 +17,8 @@ test_problem=11
 end_time=100.0
 end_step=20
 
-use_ext_kernels
-!use_fortran_kernels
+!use_ext_kernels
+use_fortran_kernels
 
 tl_check_result
 tl_eps=1.0e-15
