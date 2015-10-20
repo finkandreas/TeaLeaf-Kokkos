@@ -1,16 +1,18 @@
- 
+
    Tea Version    1.100
 Open MP and MPI Ve
    Task Count      1
- 
+
  Tea will run from the following input:-
- 
+
 *tea                                                                                                
 state 1 density=100.0 energy=0.0001                                                                 
 state 2 density=0.1 energy=25.0 geometry=rectangle xmin=0.0 xmax=1.0 ymin=1.0 ymax=2.0              
 state 3 density=0.1 energy=0.1 geometry=rectangle xmin=1.0 xmax=6.0 ymin=1.0 ymax=2.0               
 state 4 density=0.1 energy=0.1 geometry=rectangle xmin=5.0 xmax=6.0 ymin=1.0 ymax=8.0               
 state 5 density=0.1 energy=0.1 geometry=rectangle xmin=5.0 xmax=10.0 ymin=7.0 ymax=8.0              
+x_cells=512                                                                                         
+y_cells=512                                                                                         
 xmin=0.0                                                                                            
 ymin=0.0                                                                                            
 xmax=10.0                                                                                           
@@ -18,34 +20,33 @@ ymax=10.0
                                                                                                     
 initial_timestep=0.004                                                                              
 end_step=20                                                                                         
-tl_max_iters=5000                                                                                   
+tl_max_iters=10000                                                                                  
                                                                                                     
 use_ext_kernels                                                                                     
 !use_fortran_kernels                                                                                
                                                                                                     
+!tl_use_jacobi                                                                                      
+tl_use_cg                                                                                           
+!tl_use_chebyshev                                                                                   
+!tl_use_ppcg                                                                                        
+                                                                                                    
 tl_check_result                                                                                     
 tl_eps=1.0e-15                                                                                      
-                                                                                                    
-tl_ppcg_inner_steps=150                                                                             
-tl_ch_cg_epslim=0.0001                                                                              
-tl_ch_cg_presteps=20                                                                                
-x_cells=512                                                                                         
-y_cells=512                                                                                         
-tl_use_ppcg                                                                                         
 test_problem 11                                                                                     
+                                                                                                    
 *endtea                                                                                             
- 
+
  Initialising and generating
- 
+
  Reading input file
- 
+
  Reading specification for state            1
- 
+
             state density   0.1000E+03
              state energy   0.1000E-03
- 
+
  Reading specification for state            2
- 
+
             state density   0.1000E+00
              state energy   0.2500E+02
  state geometry rectangular
@@ -53,9 +54,9 @@ test_problem 11
                state xmax   0.1000E+01
                state ymin   0.1000E+01
                state ymax   0.2000E+01
- 
+
  Reading specification for state            3
- 
+
             state density   0.1000E+00
              state energy   0.1000E+00
  state geometry rectangular
@@ -63,9 +64,9 @@ test_problem 11
                state xmax   0.6000E+01
                state ymin   0.1000E+01
                state ymax   0.2000E+01
- 
+
  Reading specification for state            4
- 
+
             state density   0.1000E+00
              state energy   0.1000E+00
  state geometry rectangular
@@ -73,9 +74,9 @@ test_problem 11
                state xmax   0.6000E+01
                state ymin   0.1000E+01
                state ymax   0.8000E+01
- 
+
  Reading specification for state            5
- 
+
             state density   0.1000E+00
              state energy   0.1000E+00
  state geometry rectangular
@@ -83,258 +84,195 @@ test_problem 11
                state xmax   0.1000E+02
                state ymin   0.7000E+01
                state ymax   0.8000E+01
- 
+
+                   x_cells         512
+                   y_cells         512
                       xmin  0.0000E+00
                       ymin  0.0000E+00
                       xmax  0.1000E+02
                       ymax  0.1000E+02
          initial_timestep   0.4000E-02
                   end_step          20
-       tl_ppcg_inner_steps         150
-           tl_ch_cg_epslim  0.1000E-03
-         tl_ch_cg_presteps          20
-                   x_cells         512
-                   y_cells         512
               test_problem          11
- 
+
  Using Extension Kernels
- 
+
  Input read finished.
- 
+
  Setting up initial geometry
- 
- 
- Mesh ratio of    1.00000000000000     
+
+
+ Mesh ratio of    1.0000000000000000     
  Decomposing the mesh into            1  by            1  chunks
- 
+
  Generating chunks
- 
+
  Problem initialised and generated
- 
- Time   0.000000000000000E+000
+
+ Time    0.0000000000000000     
                        Volume            Mass         Density          Energy               U
  step:      0   0.1000000E+03   0.8377021E+04   0.8377021E+02   0.3519028E+01   0.8402212E+02
- 
+
  Starting the calculation
  Step       1 time   0.0000000 timestep   4.00E-03
-Switching after  85 steps, error   0.9372897E+00
-     eigmin     eigmax         cn      error
-    1.15207  880.16592 0.7640E+03 0.9373E+00
-Conduction error  0.3052003E-15
-EXACT error calculated as 0.3051915E-15
-Iteration count       85
- Wall clock   0.778678894042969     
- Average time per cell   2.970424247905612E-006
- Step time per cell      2.969111847050954E-006
+Conduction error  0.8687767E-15
+EXACT error calculated as 0.8687714E-15
+Iteration count      329
+ Wall clock    2.8528721332550049     
+ Average time per cell    1.0882843525905628E-005
+ Step time per cell       1.0881240996241104E-005
  Step       2 time   0.0040000 timestep   4.00E-03
-Switching after  66 steps, error   0.9615179E+00
-     eigmin     eigmax         cn      error
-    1.12335  880.08533 0.7834E+03 0.9615E+00
-Conduction error  0.1029552E-15
-EXACT error calculated as 0.1029575E-15
-Iteration count       66
- Wall clock    1.50134897232056     
- Average time per cell   2.863595909730066E-006
- Step time per cell      2.754833076323848E-006
+Conduction error  0.8913079E-15
+EXACT error calculated as 0.8913977E-15
+Iteration count      310
+ Wall clock    5.5215699672698975     
+ Average time per cell    1.0531558928050799E-005
+ Step time per cell       1.0180209756072145E-005
  Step       3 time   0.0040000 timestep   4.00E-03
-Switching after  44 steps, error   0.9740877E+00
-     eigmin     eigmax         cn      error
-    1.11300  879.71514 0.7904E+03 0.9741E+00
-Conduction error  0.1136033E-15
-EXACT error calculated as 0.1136061E-15
-Iteration count       44
- Wall clock    2.17803597450256     
- Average time per cell   2.769515958789270E-006
- Step time per cell      2.580146428954322E-006
+Conduction error  0.9506885E-15
+EXACT error calculated as 0.9506984E-15
+Iteration count      291
+ Wall clock    8.0224289894104004     
+ Average time per cell    1.0201045976524862E-005
+ Step time per cell       9.5399591373279691E-006
  Step       4 time   0.0040000 timestep   4.00E-03
-Switching after  27 steps, error   0.8938274E+00
-     eigmin     eigmax         cn      error
-    1.08689  875.47171 0.8055E+03 0.8938E+00
-Conduction error  0.2557553E-16
-EXACT error calculated as 0.2557535E-16
-Iteration count       27
- Wall clock    2.81402301788330     
- Average time per cell   2.683661477931309E-006
- Step time per cell      2.424347258056514E-006
+Conduction error  0.9818977E-15
+EXACT error calculated as 0.9819045E-15
+Iteration count      272
+ Wall clock    10.332834959030151     
+ Average time per cell    9.8541593160916818E-006
+ Step time per cell       8.8134347606683150E-006
  Step       5 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.1472325E+00
-     eigmin     eigmax         cn      error
-    1.05764  879.16401 0.8312E+03 0.1472E+00
-Conduction error  0.1574924E-17
-EXACT error calculated as 0.1577117E-17
-Iteration count       20
- Wall clock    3.43387603759766     
- Average time per cell   2.619839506223798E-006
- Step time per cell      2.362556188018061E-006
+Conduction error  0.9841644E-15
+EXACT error calculated as 0.9841712E-15
+Iteration count      254
+ Wall clock    12.476246118545532     
+ Average time per cell    9.5186203907360330E-006
+ Step time per cell       8.1763955677160993E-006
  Step       6 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.1764546E-01
-     eigmin     eigmax         cn      error
-    1.03852  877.76586 0.8452E+03 0.1765E-01
-Conduction error  0.8648915E-19
-EXACT error calculated as 0.8749882E-19
-Iteration count       20
- Wall clock    4.05550503730774     
- Average time per cell   2.578420662757708E-006
- Step time per cell      2.370003130636178E-006
+Conduction error  0.8175076E-15
+EXACT error calculated as 0.8175118E-15
+Iteration count      239
+ Wall clock    14.483032941818237     
+ Average time per cell    9.2080643601851388E-006
+ Step time per cell       7.6552159953280352E-006
  Step       7 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.1261827E-02
-     eigmin     eigmax         cn      error
-    1.01725  874.79192 0.8600E+03 0.1262E-02
-Conduction error  0.6532492E-20
-EXACT error calculated as 0.7394806E-20
-Iteration count       20
- Wall clock    4.67188096046448     
- Average time per cell   2.545973075029906E-006
- Step time per cell      2.349724127270747E-006
+Conduction error  0.9194668E-15
+EXACT error calculated as 0.9194694E-15
+Iteration count      224
+ Wall clock    16.354943037033081     
+ Average time per cell    8.9127366404032463E-006
+ Step time per cell       7.1407048380933702E-006
  Step       8 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.1899079E-03
-     eigmin     eigmax         cn      error
-    1.00538  878.95860 0.8743E+03 0.1899E-03
-Conduction error  0.1557039E-20
-EXACT error calculated as 0.2469479E-20
-Iteration count       20
- Wall clock    5.29186987876892     
- Average time per cell   2.523360194572888E-006
- Step time per cell      2.363978637731634E-006
+Conduction error  0.9053391E-15
+EXACT error calculated as 0.9053332E-15
+Iteration count      212
+ Wall clock    18.124437093734741     
+ Average time per cell    8.6424050778077799E-006
+ Step time per cell       6.7500159275368787E-006
  Step       9 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.3361301E-04
-     eigmin     eigmax         cn      error
-    0.99748  876.90166 0.8791E+03 0.3361E-04
-Conduction error  0.1128053E-21
-EXACT error calculated as 0.1064756E-20
-Iteration count       20
- Wall clock    5.91391110420227     
- Average time per cell   2.506642279816636E-006
- Step time per cell      2.370929905737285E-006
+Conduction error  0.9749582E-15
+EXACT error calculated as 0.9749567E-15
+Iteration count      202
+ Wall clock    19.800842046737671     
+ Average time per cell    8.3926908903069689E-006
+ Step time per cell       6.3949091781978495E-006
  Step      10 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.1091882E-04
-     eigmin     eigmax         cn      error
-    0.99174  879.92088 0.8873E+03 0.1092E-04
-Conduction error  0.3536173E-22
-EXACT error calculated as 0.9826917E-21
-Iteration count       20
- 
- Time   4.000000000000000E-003
+Conduction error  0.8393892E-15
+EXACT error calculated as 0.8393794E-15
+Iteration count      193
+
+ Time    4.0000000000000001E-003
                        Volume            Mass         Density          Energy               U
  step:     10   0.1000000E+03   0.8377021E+04   0.8377021E+02   0.3519028E+01   0.9953145E+02
- 
- Wall clock    6.53753590583801     
- Average time per cell   2.493872034392552E-006
- Step time per cell      2.377460077696014E-006
+
+ Wall clock    21.399060964584351     
+ Average time per cell    8.1630939348542590E-006
+ Step time per cell       6.0966531236772425E-006
  Step      11 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.3513880E-05
-     eigmin     eigmax         cn      error
-    0.98811  876.95979 0.8875E+03 0.3514E-05
-Conduction error  0.4528913E-22
-EXACT error calculated as 0.1034444E-20
-Iteration count       20
- Wall clock    7.15462088584900     
- Average time per cell   2.481155702711972E-006
- Step time per cell      2.353069248783868E-006
+Conduction error  0.8329650E-15
+EXACT error calculated as 0.8329833E-15
+Iteration count      183
+ Wall clock    22.906098127365112     
+ Average time per cell    7.9436208993270565E-006
+ Step time per cell       5.7488332458888181E-006
  Step      12 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.2352413E-06
-     eigmin     eigmax         cn      error
-    0.98414  878.44950 0.8926E+03 0.2352E-06
-Conduction error  0.6140217E-23
-EXACT error calculated as 0.9861377E-21
-Iteration count       20
- Wall clock    7.77543687820435     
- Average time per cell   2.471744816527159E-006
- Step time per cell      2.366534317843616E-006
+Conduction error  0.9274970E-15
+EXACT error calculated as 0.9274955E-15
+Iteration count      175
+ Wall clock    24.340905904769897     
+ Average time per cell    7.7377655998134287E-006
+ Step time per cell       5.4732854550820775E-006
  Step      13 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.4888350E-07
-     eigmin     eigmax         cn      error
-    0.98091  876.48592 0.8935E+03 0.4888E-07
-Conduction error  0.3122779E-15
-EXACT error calculated as 0.3122802E-15
-Iteration count       19
- Wall clock    8.11934208869934     
- Average time per cell   2.382525543418104E-006
- Step time per cell      1.310051629843656E-006
+Conduction error  0.9311705E-15
+EXACT error calculated as 0.9311804E-15
+Iteration count      169
+ Wall clock    25.722733020782471     
+ Average time per cell    7.5480337937523682E-006
+ Step time per cell       5.2711829994223081E-006
  Step      14 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.4650799E-06
-     eigmin     eigmax         cn      error
-    0.98197  880.79275 0.8970E+03 0.4651E-06
-Conduction error  0.7253588E-15
-EXACT error calculated as 0.7253694E-15
-Iteration count       19
- Wall clock    8.46377301216125     
- Average time per cell   2.306195126168729E-006
- Step time per cell      1.312576387135778E-006
+Conduction error  0.8551780E-15
+EXACT error calculated as 0.8551838E-15
+Iteration count      164
+ Wall clock    27.060894966125488     
+ Average time per cell    7.3735087166174452E-006
+ Step time per cell       5.1046181397396140E-006
  Step      15 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.1525279E-05
-     eigmin     eigmax         cn      error
-    0.98015  880.17062 0.8980E+03 0.1525E-05
-Conduction error  0.1342455E-22
-EXACT error calculated as 0.9786950E-21
-Iteration count       20
- Wall clock    9.09492897987366     
- Average time per cell   2.312960047371841E-006
- Step time per cell      2.340980245207902E-006
+Conduction error  0.8906682E-15
+EXACT error calculated as 0.8906615E-15
+Iteration count      158
+ Wall clock    28.345081090927124     
+ Average time per cell    7.2085268887652399E-006
+ Step time per cell       4.8987121772370301E-006
  Step      16 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.5320025E-06
-     eigmin     eigmax         cn      error
-    0.97778  878.71002 0.8987E+03 0.5320E-06
-Conduction error  0.7998917E-23
-EXACT error calculated as 0.9949342E-21
-Iteration count       20
- Wall clock    9.71569299697876     
- Average time per cell   2.316401719326677E-006
- Step time per cell      2.366142325627152E-006
+Conduction error  0.9163965E-15
+EXACT error calculated as 0.9164112E-15
+Iteration count      152
+ Wall clock    29.576272010803223     
+ Average time per cell    7.0515327479370171E-006
+ Step time per cell       4.6965524234110489E-006
  Step      17 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.2115772E-07
-     eigmin     eigmax         cn      error
-    0.97380  877.19068 0.9008E+03 0.2116E-07
-Conduction error  0.2787730E-16
-EXACT error calculated as 0.2787764E-16
-Iteration count       19
- Wall clock    10.0597798824310     
- Average time per cell   2.257353812370532E-006
- Step time per cell      1.311187588726170E-006
+Conduction error  0.8254825E-15
+EXACT error calculated as 0.8254851E-15
+Iteration count      147
+ Wall clock    30.762572050094604     
+ Average time per cell    6.9029352637110555E-006
+ Step time per cell       4.5253063944983296E-006
  Step      18 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.1308894E-06
-     eigmin     eigmax         cn      error
-    0.97553  880.47848 0.9026E+03 0.1309E-06
-Conduction error  0.3668769E-15
-EXACT error calculated as 0.3668843E-15
-Iteration count       19
- Wall clock    10.4028360843658     
- Average time per cell   2.204648353654193E-006
- Step time per cell      1.306942067458294E-006
+Conduction error  0.9698948E-15
+EXACT error calculated as 0.9699037E-15
+Iteration count      143
+ Wall clock    31.914110898971558     
+ Average time per cell    6.7634817545088781E-006
+ Step time per cell       4.3927038859692402E-006
  Step      19 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.1808120E-05
-     eigmin     eigmax         cn      error
-    0.97639  879.99238 0.9013E+03 0.1808E-05
-Conduction error  0.2309313E-22
-EXACT error calculated as 0.9669122E-21
-Iteration count       20
- Wall clock    11.0226409435272     
- Average time per cell   2.213054645644182E-006
- Step time per cell      2.362598024774343E-006
+Conduction error  0.9142838E-15
+EXACT error calculated as 0.9142840E-15
+Iteration count      141
+ Wall clock    33.047358989715576     
+ Average time per cell    6.6350352617997777E-006
+ Step time per cell       4.3228719732724130E-006
  Step      20 time   0.0040000 timestep   4.00E-03
-Switching after  20 steps, error   0.7386388E-08
-     eigmin     eigmax         cn      error
-    0.97285  878.10827 0.9026E+03 0.7386E-08
-Conduction error  0.6070001E-16
-EXACT error calculated as 0.6070259E-16
-Iteration count       19
- 
- Time   4.000000000000000E-003
+Conduction error  0.8107790E-15
+EXACT error calculated as 0.8107810E-15
+Iteration count      135
+
+ Time    4.0000000000000001E-003
                        Volume            Mass         Density          Energy               U
  step:     20   0.1000000E+03   0.8377021E+04   0.8377021E+02   0.3519028E+01   0.1034697E+03
- 
- Wall clock    11.3655920028687     
- Average time per cell   2.167814636777621E-006
- Step time per cell      1.306671038037166E-006
- 
- Time   4.000000000000000E-003
+
+ Wall clock    34.130890130996704     
+ Average time per cell    6.5099506628030214E-006
+ Step time per cell       4.1332741602673195E-006
+
+ Time    4.0000000000000001E-003
                        Volume            Mass         Density          Energy               U
  step:     20   0.1000000E+03   0.8377021E+04   0.8377021E+02   0.3519028E+01   0.1034697E+03
- 
-Test problem  11 is within   0.1201070E-07% of the expected solution
+
+Test problem  11 is within   0.2029904E-07% of the expected solution
  This test is considered PASSED
- 
+
  Calculation complete
  Tea is finishing
- Wall clock    11.3679699897766     
- First step overhead  5.617284774780273E-002
+ Wall clock    34.133397102355957     
+ First step overhead  0.18377113342285156     

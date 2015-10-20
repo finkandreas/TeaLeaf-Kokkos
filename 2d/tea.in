@@ -15,13 +15,13 @@ initial_timestep=0.004
 end_step=20
 tl_max_iters=10000
 
-!use_ext_kernels
-use_fortran_kernels
+use_ext_kernels
+!use_fortran_kernels
 
 !tl_use_jacobi
-!tl_use_cg
+tl_use_cg
 !tl_use_chebyshev
-tl_use_ppcg
+!tl_use_ppcg
 
 tl_check_result
 tl_eps=1.0e-15

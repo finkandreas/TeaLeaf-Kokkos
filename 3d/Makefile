@@ -58,7 +58,7 @@ COMPILER         = GNU
 MPI_F90          = mpif90
 MPI_CPP          = mpic++
 KOKKOS_PATH     ?= ../kokkos_src
-OPTIONS         += #-DENABLE_PROFILING  #-DENABLE_TIMELOGGING
+OPTIONS         += #-DENABLE_PROFILING
 DEBUG			 = no
 IEEE			 = no
 EXE 		     = tea_leaf
@@ -85,7 +85,7 @@ FLAGS_XL       = -O5 -qipa=partition=large -g -qfullpath -Q -qsigtrap -qextname=
 CFLAGS_          = -O3
 CFLAGS_INTEL     = -O3 -march=native -no-prec-div -restrict -fno-alias 
 CFLAGS_SUN       = -fast -xipo=2
-CFLAGS_GNU       = -O3 -march=native -funroll-loops -DKOKKOSP_ENABLE_PROFILING
+CFLAGS_GNU       = -O3 -march=native -funroll-loops
 CFLAGS_CRAY      = -em -h list=a
 CFLAGS_PGI       = -fastsse -gopt -Mipa=fast -Mlist -c11
 CFLAGS_PATHSCALE = -O3
