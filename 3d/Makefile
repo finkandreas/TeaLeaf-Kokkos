@@ -1,4 +1,4 @@
-#Crown Copyright 2014 AWE.
+# Crown Copyright 2014 AWE.
 #
 # This file is part of TeaLeaf.
 #
@@ -13,25 +13,55 @@
 # details.
 #
 # You should have received a copy of the GNU General Public License along with 
-# TeaLeaf. If not, see http://www.gnu.org/licenses/.
-
-#  @brief Makefile for TeaLeaf
+# TeaLeaf. If not, see http://www.gnu.org/licenses/.  
+#
+#  @brief Makefile for CloverLeaf
 #  @author David Beckingsale, Wayne Gaudin, Matthew Martineau
-#  @details Makefile for the Kokkos implementation of TeaLeaf.
+#  @details Agnostic, platform independent makefile for the TeaLeaf benchmark code.
+#
+# To select a OpenMP compiler option, you can do this in the shell before typing make:-
+#
+#  		make COMPILER=INTEL       # to select the Intel flags
+#  		make COMPILER=GNU         # to select the GNU flags
+#  		make COMPILER=CRAY        # to select the Cray flags
+#  		make COMPILER=PGI         # to select the PGI flags
+#  		make COMPILER=XL          # to select the IBM Xlf flags
+#
+# or you could export, e.g. 'export COMPILER=INTEL', in a shell before making
+#
+# Don't forget to set the number of threads you want to use, like so
+#
+# 		export OMP_NUM_THREADS=16
+#
+# USAGE:
+# 		make                         # Will make the binary
+#       make clean                   # Will clean up the directory
+#       make DEBUG=yes               # Selects debugging flags
+#       make IEEE=yes                # Selects IEEE compliance flags
+#		make TARGET=<OMP|CUDA|MIC>   # Selects which device to target
+#
+# Please note that KOKKOS_PATH is the location of a Kokkos installation, the
+# local copy is the source that TeaLeaf has been tested against but feel free
+# to point to a separate installation.
+#
+# EXAMPLE:
+#
+# 		make COMPILER=INTEL MPI_F90=mpiifort MPI_C=mpiicc DEBUG=yes IEEE=yes 
+#
+# will compile with the intel compiler with intel debug and ieee flags included
 
 default: build
 
-# User defined parameters, suggests tested implementations
-# TARGET   = <OMP|CUDA|MIC>   : OpenMP, CUDA, MIC native compilation
-# COMPILER = <INTEL|GNU> 	  : Currently tested with Intel, GNU compilers
-# KOKKOS_PATH is the root of Kokkos source
-TARGET   	 = OMP
-COMPILER 	 = GNU
-MPI_F90	 	 = mpif90
-MPI_CPP      = mpic++
-KOKKOS_PATH ?= ../kokkos_src
-OPTIONS     += #-DENABLE_TIMELOGGING -DENABLE_PROFILING
-EXE 		 = tea_leaf
+# User-defined parameters
+TARGET           = OMP
+COMPILER         = GNU
+MPI_F90          = mpif90
+MPI_CPP          = mpic++
+KOKKOS_PATH     ?= ../kokkos_src
+OPTIONS         += #-DENABLE_PROFILING  #-DENABLE_TIMELOGGING
+DEBUG			 = no
+IEEE			 = no
+EXE 		     = tea_leaf
 
 # Compiler-specific flags
 OMP_INTEL     = -openmp
@@ -55,13 +85,13 @@ FLAGS_XL       = -O5 -qipa=partition=large -g -qfullpath -Q -qsigtrap -qextname=
 CFLAGS_          = -O3
 CFLAGS_INTEL     = -O3 -march=native -no-prec-div -restrict -fno-alias 
 CFLAGS_SUN       = -fast -xipo=2
-CFLAGS_GNU       = -O3 -march=native -funroll-loops
+CFLAGS_GNU       = -O3 -march=native -funroll-loops -DKOKKOSP_ENABLE_PROFILING
 CFLAGS_CRAY      = -em -h list=a
-CFLAGS_PGI       = -fastsse -gopt -Mipa=fast -Mlist
+CFLAGS_PGI       = -fastsse -gopt -Mipa=fast -Mlist -c11
 CFLAGS_PATHSCALE = -O3
 CFLAGS_XL        = -O5 -qipa=partition=large -g -qfullpath -Q -qlistopt -qattr=full -qlist -qreport -qxref=full -qsource -qsuppress=1506-224:1500-036 -qsrcmsg
 
-ifdef DEBUG
+ifeq ($(DEBUG), yes)
   FLAGS_INTEL     = -O0 -g -debug all -check all -traceback -check noarg_temp_created
   FLAGS_SUN       = -g -xopenmp=noopt -stackvar -u -fpover=yes -C -ftrap=common
   FLAGS_GNU       = -O0 -g -O -Wall -Wextra -fbounds-check
@@ -80,7 +110,7 @@ ifdef DEBUG
   CFLAGS_XL      = -O0 -g -qfullpath -qcheck -qflttrap=ov:zero:invalid:en -qsource -qinitauto=FF -qmaxmem=-1 -qsrcmsg
 endif
 
-ifdef IEEE
+ifeq ($(IEEE),yes)
   I3E_INTEL     = -fp-model strict -fp-model source -prec-div -prec-sqrt
   I3E_SUN       = -fsimple=0 -fns=no
   I3E_GNU       = -ffloat-store
