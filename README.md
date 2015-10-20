@@ -7,10 +7,10 @@ This implementation has been configured with default values to simply compile wi
 The `TARGET` flag specifies which device will be targetted by the executable:
 * `OMP` - CPU using OpenMP
 * `CUDA` - NVIDIA GPU using CUDA
-* `MIC` - Intel Xeon Phi using native compilation
+* `MIC` - Intel Xeon Phi Knights Corner using native compilation
 This is currently defaulted to use OpenMP.
 
-The `COMPILER` flag specifies which compiler suite to use, where both Intel and GNU compilers have been tested with this TeaLeaf implementation. This is currently defaulted to use the Intel compilers.
+The `COMPILER` flag specifies which compiler suite to use, this is currently defaulted to use the GNU compilers.
 
 The MPI implementation can be changed using the `MPI_F90` and `MPI_CPP` flags. This is currently defaulted to use Intel MPI (mpiifort and mpiicpc).
 
