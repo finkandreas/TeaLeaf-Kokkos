@@ -2,6 +2,16 @@
 
 This TeaLeaf implementation uses the Kokkos C++ programming model developed by Sandia National Laboratories https://github.com/kokkos, which allows the application to target CPUs, NVIDIA GPUs and Intel Xeon Phi Knights Corner devices.
 
+## Compiler Support
+
+This implementation has been tested against a number of compilers:
+
+GNU   - 4.8.4, 4.9.3, 5.1.0
+Intel - 15.0.3
+CUDA  - 6.5 and 7.0
+
+Please note that compiler support will depend upon which target you choose, for instance when targetting CUDA 6.5 you cannot use GNU 5.0+. If using a different Kokkos installation, it is also important to look at the compiler support available for your particular release https://github.com/kokkos.
+
 ## Compiling
 
 The Makefile has been configured with default values to allow you to simply compile with `make`.
