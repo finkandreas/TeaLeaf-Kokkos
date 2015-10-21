@@ -1,26 +1,28 @@
-#TeaLeaf - Kokkos
+#TeaLeaf - Kokkos + MPI
+
+This TeaLeaf implementation uses the Kokkos C++ programming model developed by Sandia National Laboratories https://github.com/kokkos, which allows the application to target CPUs, NVIDIA GPUs and Intel Xeon Phi Knights Corner devices.
 
 ## Compiling
 
-This implementation has been configured with default values to simply compile with `make`.
+The Makefile has been configured with default values to allow you to simply compile with `make`.
 
 The `TARGET` flag specifies which device will be targetted by the executable:
-* `OMP` - CPU using OpenMP
+* `OMP`  - CPU using OpenMP
 * `CUDA` - NVIDIA GPU using CUDA
-* `MIC` - Intel Xeon Phi Knights Corner using native compilation
+* `MIC`  - Intel Xeon Phi using native compilation
+
 This is currently defaulted to use OpenMP.
 
-The `COMPILER` flag specifies which compiler suite to use, this is currently defaulted to use the GNU compilers.
+The `COMPILER` flag specifies which compiler suite to use, and is defaulted to use the GNU compilers.
 
-The MPI implementation can be changed using the `MPI_F90` and `MPI_CPP` flags. This is currently defaulted to use Intel MPI (mpiifort and mpiicpc).
+The default MPI wrappers are `mpif90` and `mpicc`, if you want to change those you can simply type:
 
-The `KOKKOS_PATH` flag points to the root of the Kokkos source directory.
+`make MPI_F90=<alternative> MPI_C=<alternative>`
+`e.g. MPI_F90=mpiifort MPI_C=mpiicc`
 
-If compiling for CUDA, please note that there is a wrapper called `nvcc_wrapper` which lives inside kokkos/config/, and the `default_compiler` option must be changed to a valid C++ compiler. The current default for this compiler is `icpc`.
+The `KOKKOS_PATH` flag points to the root of the Kokkos source directory, and currently points to a local directory containing the Kokkos source that has been compiled against.
 
-There are two optional defines that were used for testing and can be passed to the `OPTIONS` flag in the Makefile:
-* `ENABLE_TIMELOGGING` - The timelogging module will read each new TeaLeaf output file and create a CSV entry with some important data such as wallclock time and success, but please note it is currently ugly and very inflexible.
-* `ENABLE_PROFILING` - This enables some simple profiling for each of the functions in TeaLeaf, and prints results to output.
+If compiling for CUDA, please note that there is a wrapper called `nvcc_wrapper` which lives inside kokkos_src/config/, and the `default_compiler` option must be changed to a valid C++ compiler. The current default for this compiler is `g++`.
 
 ### Other Flags
 
@@ -31,10 +33,10 @@ specific options or IEEE compatability.
 To produce a version that has IEEE compatiblity a further flag has to be set on 
 the compiler line.
 
-`make IEEE=1`
+`make IEEE=yes`
 
 * INTEL: -fp-model strict –fp-model source –prec-div –prec-sqrt
-* GNU: -ffloat-store
+* GNU  : -ffloat-store
 
 Note that the MPI communications have been written to ensure bitwise identical 
 answers independent of core count. However under some compilers this is not 
@@ -50,10 +52,14 @@ Extra options can be added without modifying the makefile by setting the `OPTION
 
 Finally, a `DEBUG` flag can be set to use debug options for a specific compiler.
 
-`make COMPILER=PGI DEBUG=1`
+`make COMPILER=PGI DEBUG=yes`
 
 These flags are also compiler specific, and so will depend on the `COMPILER` 
 environment variable.
+
+Optional function-level profiling can be enabled for all of the C components of the application by defining `ENABLE_PROFILING`.
+
+`make COMPILER=INTEL OPTIONS=-DENABLE_PROFILING`
 
 ### File Input
 
@@ -83,25 +89,45 @@ In the event that both the above options are set, the simulation will terminate 
 
 `ymax <R>`
 
-The above four options set the size of the computational domain. The default domain size is a 10cm square. 
+`zmin <R>` (for 3d)
+
+`zmax <R>` (for 3d)
+
+The above options set the size of the computational domain. The default domain size is a 10cm square/cubed. 
 
 `x_cells <I>`
 
 `y_cells <I>`
 
-The two options above set the cell count for each coordinate direction. The default is 10 cells in each direction.
+`z_cells <I>` (for 3d)
+
+The options above set the cell count for each coordinate direction.
 
 The geometric information and initial conditions are set using the following keywords with three possible variations. Note that state 1 is always the ambient material and any geometry information is ignored. Areas not covered by other defined states receive the energy and density of state 1.
 
+2d:
+
 `state <I> density <R> energy <R> geometry rectangle xmin <R> ymin <R> xmax <R> ymax <R> `
+
+3d:
+
+`state <I> density <R> energy <R> geometry cuboid xmin <R> ymin <R> zmin <R> xmax <R> ymax <R> zmax <R>`
 
 Defines a rectangular region of the domain with the specified energy and density.
 
+2d:
 `state <I> density <R> energy <R> geometry circle xmin <R> ymin <R> radius <R>`
+
+3d:
+`state <I> density <R> energy <R> geometry circle xmin <R> ymin <R> zmin <R> radius <R>`
 
 Defines a circular region of the domain with the specified energy and density.
 
+2d:
 `state <I> density <R> energy <R> geometry point xmin <R> ymin <R>`
+
+3d:
+`state <I> density <R> energy <R> geometry point xmin <R> ymin <R> zmax <R>`
 
 Defines a cell in the domain with the specified energy and density.
 
@@ -121,7 +147,15 @@ This option specifies the number of Conjugate Gradient iterations completed befo
 
 `tl_ppcg_inner_steps <I>`
 
-Number of inner steps to run when using the PPCG solver. The default value is 10.
+Number of inner steps to run when using the PPCG solver. Please note that a large mesh size will require this parameter to be increased for optimal performance. For instance, a mesh size of 4096x4096 works best when the parameter is set to 350 or greater.
+
+`use_ext_kernels`
+
+Makes the application use the C++ Kokkos kernels at runtime.
+
+`use_fortran_kernels`
+
+Make the application use the Fortran kernels at runtime.
 
 `tl_ch_cg_errswitch`
 
@@ -134,14 +168,6 @@ Default error to switch from CG to Chebyshev when using Chebyshev solver with th
 `tl_check_result`
 
 After the solver reaches convergence, calculate ||b-Ax|| to make sure the solver has actually converged. The default for this option is off.
-
-`tl_preconditioner_type`
-
-This keyword invokes the pre-conditioner. Options are:
-
-* `none` - No preconditioner.
-* `jac_diag` - Diagonal Jacobi preconditioner. Typically reduces condition number by around 5% but may not reduce time to solution
-* `jac_block` - Block Jacobi preconditioner (with a currently hardcoded block size of 4). Typically reduces the condition number by around 50% but may not reduce time to solution
 
 `tl_use_jacobi`
 
@@ -161,8 +187,7 @@ This keyword selects the Chebyshev method to solve the linear system.
 
 `profiler_on`
 
-
-This option turns the code's coarse grained internal profiler end. Timing information is reported at the end of the simulation in the tea.out file. The default is no profiling.
+This option turns the Fortran code's coarse grained internal profiler end. Timing information is reported at the end of the simulation in the tea.out file. The default is no profiling.
 
 `verbose_on`
 
@@ -180,11 +205,10 @@ This option sets the convergence criteria for the selected solver. It uses a lea
 
 This option uses the density as the conduction coefficient. This is the default option.
 
-`tl_coefficient_inverrse_density
+`tl_coefficient_inverse_density
 
 This option uses the inverse density as the conduction coefficient.
 
 `test_problem <I>`
 
 This keyword selects a standard test with a "known" solution. Test problem 1 is automatically generated if the tea.in file does not exist. Test problems 2-5 are shipped in the TeaLeaf repository. Note that the known solution for an iterative solver is not an analytic solution but is the solution for a single core simulation with IEEE options enabled with the Intel compiler and a strict convergence of 1.0e-15. The difference to the expected solution is reported at the end of the simulation in the tea.out file. There is no default value for this option.
-
