@@ -26,10 +26,6 @@ If compiling for CUDA, please note that there is a wrapper called `nvcc_wrapper`
 
 ### Other Flags
 
-Optional function-level profiling can be enabled for all of the C components of the application by enabling the `CPROFILER` option:
-
-`make CPROFILER=yes`
-
 The default compilation with the COMPILER flag set chooses the optimal 
 performing set of flags for the specified compiler, but with no hardware 
 specific options or IEEE compatability.
@@ -60,6 +56,10 @@ Finally, a `DEBUG` flag can be set to use debug options for a specific compiler.
 
 These flags are also compiler specific, and so will depend on the `COMPILER` 
 environment variable.
+
+Optional function-level profiling can be enabled for all of the C components of the application by defining `ENABLE_PROFILING`.
+
+`make COMPILER=INTEL OPTIONS=-DENABLE_PROFILING`
 
 ### File Input
 
