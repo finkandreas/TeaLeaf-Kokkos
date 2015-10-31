@@ -12,7 +12,7 @@ ymax=10.0
 zmax=10.0
 
 profiler_on
-test_problem=7
+test_problem=1
 
 end_time=100.0
 end_step=20
