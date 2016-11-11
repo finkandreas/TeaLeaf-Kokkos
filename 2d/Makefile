@@ -19,6 +19,10 @@
 #  @author David Beckingsale, Wayne Gaudin, Matthew Martineau
 #  @details Makefile for the Kokkos implementation of TeaLeaf.
 
+
+KOKKOS_PATH 	?= $(HOME)/libs/kokkos
+include $(KOKKOS_PATH)/Makefile.kokkos
+
 default: build
 
 # User defined parameters, suggests tested implementations
@@ -29,7 +33,6 @@ TARGET           = OMP
 COMPILER         = GNU
 MPI_F90          = mpif90
 MPI_CPP          = mpic++
-KOKKOS_PATH 	?= ../kokkos_src
 OPTIONS     	+= #-DENABLE_PROFILING
 EXE 		 = tea_leaf
 
@@ -97,7 +100,7 @@ LFLAGS=-lstdc++
 
 # Kokkos settings
 ifeq ($(TARGET), CUDA)
-  CXX = $(KOKKOS_PATH)/config/nvcc_wrapper
+  CXX = $(NVCC_WRAPPER)
   KOKKOS_DEVICES = "Cuda"
   KOKKOS_ARCH = "Kepler35"
   CXXFLAGS += -DCUDA
@@ -148,7 +151,6 @@ FOBJ=\
 OBJ=$(patsubst %.cpp,%.o,$(wildcard *.cpp))
 OBJ+=$(FOBJ)
 
-include $(KOKKOS_PATH)/Makefile.kokkos
 include make.deps
 
 build: $(EXE)
@@ -159,7 +161,7 @@ $(EXE): Makefile $(OBJ) $(KOKKOS_LINK_DEPENDS)
 
 .PHONY: clean 
 
-clean: kokkos-clean
+clean:
 	rm -f *.o *.cuda *.host *.mod tea_leaf
 
 %_module.mod: %.f90 %.o

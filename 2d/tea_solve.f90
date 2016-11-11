@@ -42,7 +42,7 @@ CONTAINS
         INTEGER :: fields(NUM_FIELDS)
 
         REAL(KIND=8) :: ry,rx, error, exact_error
-        REAL(KIND=8) :: timer,halo_time,solve_time,init_time,reset_time
+        REAL(KIND=8) :: timer,halo_time,solve_time,init_time,reset_time,initial_residual
         REAL(KIND=8) :: rro, pw, rrn, alpha, beta
         REAL(KIND=8) :: eigmin, eigmax, theta, cn
         REAL(KIND=8) :: cg_time, ch_time, total_solve_time, ch_per_it, cg_per_it, iteration_time
@@ -125,7 +125,16 @@ CONTAINS
                 init_time=init_time+(timer()-halo_time)
 
                 ! and globally sum rro
+                ! IF (profiler_on) dot_product_time=timer()
                 CALL tea_allsum(rro)
+                ! IF (profiler_on) profiler%dot_product = profiler%dot_product+ (timer() - dot_product_time)
+                ! IF (profiler_on) solve_time = solve_time + (timer()-dot_product_time)
+                initial_residual=SQRT(rro)
+                IF(parallel%boss) THEN
+        !$        IF(OMP_GET_THREAD_NUM().EQ.0) THEN
+                    WRITE(g_out,*)"Initial residual ",initial_residual
+        !$        ENDIF
+                ENDIF
             ELSEIF(tl_use_jacobi) THEN
                 IF(use_ext_kernels) THEN
                     CALL ext_jacobi_kernel_init(    &                
@@ -498,7 +507,11 @@ CONTAINS
                     ENDIF
                 ENDIF
 
-                IF (abs(error) .LT. eps) EXIT
+                error=SQRT(error)
+                IF(parallel%boss) THEN
+                    WRITE(g_out,*)"Residual ",error,error/initial_residual
+                ENDIF
+                IF (error.LT. eps*initial_residual) EXIT
 
             ENDDO
 

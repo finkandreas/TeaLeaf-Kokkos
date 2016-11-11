@@ -88,59 +88,13 @@ SUBROUTINE field_summary()
         IF(parallel%boss) THEN
             !$ IF(OMP_GET_THREAD_NUM().EQ.0) THEN
             IF(test_problem.GE.1) THEN
-
-                IF(test_problem.EQ.6) qa_diff=ABS((100.0_8*(temp/103.88639125996923_8))-100.0_8) ! 500x500 20 steps
-
-                ! 32x32
-                IF(test_problem.EQ.7) qa_diff=ABS((100.0_8*(temp/177.00175203427580_8))-100.0_8)
-
-                ! 64x64
-                IF(test_problem.EQ.8) qa_diff=ABS((100.0_8*(temp/139.97102840522848_8))-100.0_8)
-
-                ! 128x128
-                IF(test_problem.EQ.9) qa_diff=ABS((100.0_8*(temp/118.33195538063963_8))-100.0_8)
-
-                ! 256x256
-                IF(test_problem.EQ.10) qa_diff=ABS((100.0_8*(temp/108.12687625327908_8))-100.0_8)
-
-                ! 512x512
-                IF(test_problem.EQ.11) qa_diff=ABS((100.0_8*(temp/103.46970921076068_8))-100.0_8)
-
-                ! 1024x1024
-                IF(test_problem.EQ.12) qa_diff=ABS((100.0_8*(temp/101.21009327612924_8))-100.0_8)
-
-                ! 2048x2048
-                IF(test_problem.EQ.13) qa_diff=ABS((100.0_8*(temp/100.16633923123922_8))-100.0_8)
-
-                ! 4096x4096
-                IF(test_problem.EQ.14) qa_diff=ABS((100.0_8*(temp/99.695059768963887_8))-100.0_8)
-
-                ! 4000 4000
-                IF(test_problem.EQ.15) qa_diff=ABS((100.0_8*(temp/99.756584330021866_8))-100.0_8)
-
-                ! 316x316
-                IF(test_problem.EQ.16) qa_diff=ABS((100.0_8*(temp/106.22536751207716_8))-100.0_8)
-
-                ! 447x447
-                IF(test_problem.EQ.17) qa_diff=ABS((100.0_8*(temp/103.75236286020100_8))-100.0_8)
-
-                ! 548x548
-                IF(test_problem.EQ.18) qa_diff=ABS((100.0_8*(temp/102.95322957172701_8))-100.0_8)
-
-                ! 632x632
-                IF(test_problem.EQ.19) qa_diff=ABS((100.0_8*(temp/102.61257379535277_8))-100.0_8)
-
-                ! 707x707
-                IF(test_problem.EQ.20) qa_diff=ABS((100.0_8*(temp/101.99792927438858_8))-100.0_8)
-
-                ! 775x775
-                IF(test_problem.EQ.21) qa_diff=ABS((100.0_8*(temp/101.93825682423312_8))-100.0_8)
-
-                ! 837x837
-                IF(test_problem.EQ.22) qa_diff=ABS((100.0_8*(temp/101.54636465546844_8))-100.0_8)
-
-                ! 894x894
-                IF(test_problem.EQ.23) qa_diff=ABS((100.0_8*(temp/101.51302189154072_8))-100.0_8)
+      ! Note that the "correct" solution is with IEEE switched on, 1 task, 1 thread, Intel compiler on a Haswell, except 
+      ! test_problem 5 which uses 24 tasks, 1 thread.
+              IF(test_problem.EQ.1) qa_diff=ABS((100.0_8*(temp/157.55084183279294_8))-100.0_8)  ! 
+              IF(test_problem.EQ.2) qa_diff=ABS((100.0_8*(temp/106.27221178646569_8))-100.0_8)  
+              IF(test_problem.EQ.3) qa_diff=ABS((100.0_8*(temp/99.955877498324000_8))-100.0_8)
+              IF(test_problem.EQ.4) qa_diff=ABS((100.0_8*(temp/97.277332050749976_8))-100.0_8)
+              IF(test_problem.EQ.5) qa_diff=ABS((100.0_8*(temp/95.462351583362249_8))-100.0_8)
 
 
 
