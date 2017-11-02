@@ -22,22 +22,22 @@ struct TopBottomPacker
 
 		if(face == CHUNK_TOP && pack)
 		{
-			offset = dims.x*(dims.y-HALO_PAD-depth) + lines*2*HALO_PAD;
+			offset = dims.x*(dims.y-HALO_PAD-depth) + lines*2*HALO_PAD + HALO_PAD;
 			buffer(index) = field(offset+index);
 		}
 		else if(face == CHUNK_BOTTOM && pack)
 		{
-			offset = dims.x*HALO_PAD + lines*2*HALO_PAD;
+			offset = dims.x*HALO_PAD + lines*2*HALO_PAD + HALO_PAD;
 			buffer(index) = field(offset+index);
 		}
 		else if (face == CHUNK_TOP)
 		{
-			offset = dims.x*(dims.y-HALO_PAD) + lines*2*HALO_PAD;
+			offset = dims.x*(dims.y-HALO_PAD) + lines*2*HALO_PAD + HALO_PAD;
 			field(offset+index)=buffer(index);
 		}
 		else
 		{
-			offset = dims.x*(HALO_PAD-depth) + lines*2*HALO_PAD;
+			offset = dims.x*(HALO_PAD-depth) + lines*2*HALO_PAD + HALO_PAD;
 			field(offset+index)=buffer(index);
 		}
 	}
@@ -68,22 +68,22 @@ struct LeftRightPacker
 
 		if(face == CHUNK_LEFT && pack)
 		{
-			offset = HALO_PAD + lines*(dims.x-depth);
+			offset = HALO_PAD + lines*(dims.x-depth) + HALO_PAD*dims.x;
 			buffer(index) = field(offset+index);
 		}
 		else if(face == CHUNK_RIGHT && pack)
 		{
-			offset = dims.x-HALO_PAD-depth + lines*(dims.x-depth);
+			offset = dims.x-HALO_PAD-depth + lines*(dims.x-depth) + HALO_PAD*dims.x;
 			buffer(index) = field(offset+index);
 		}
 		else if(face == CHUNK_LEFT)
 		{
-			offset = HALO_PAD-depth + lines*(dims.x-depth);
+			offset = HALO_PAD-depth + lines*(dims.x-depth) + HALO_PAD*dims.x;
 			field(offset+index)=buffer(index);
 		}
 		else
 		{
-			offset = dims.x-HALO_PAD + lines*(dims.x-depth);
+			offset = dims.x-HALO_PAD + lines*(dims.x-depth) + HALO_PAD*dims.x;
 			field(offset+index)=buffer(index);
 		}
 	}
