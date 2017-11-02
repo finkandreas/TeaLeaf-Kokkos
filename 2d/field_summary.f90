@@ -89,6 +89,12 @@ SUBROUTINE field_summary()
             !$ IF(OMP_GET_THREAD_NUM().EQ.0) THEN
             IF(test_problem.GE.1) THEN
 
+                IF(test_problem.EQ.1) qa_diff=ABS((100.0_8*(temp/157.55084183279294_8))-100.0_8)  !
+                IF(test_problem.EQ.2) qa_diff=ABS((100.0_8*(temp/106.27221178646569_8))-100.0_8)
+                IF(test_problem.EQ.3) qa_diff=ABS((100.0_8*(temp/99.955877498324000_8))-100.0_8)
+                IF(test_problem.EQ.4) qa_diff=ABS((100.0_8*(temp/97.277332050749976_8))-100.0_8)
+                IF(test_problem.EQ.5) qa_diff=ABS((100.0_8*(temp/95.462351583362249_8))-100.0_8)
+
                 IF(test_problem.EQ.6) qa_diff=ABS((100.0_8*(temp/103.88639125996923_8))-100.0_8) ! 500x500 20 steps
 
                 ! 32x32
